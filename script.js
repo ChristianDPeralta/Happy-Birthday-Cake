@@ -1,75 +1,69 @@
-// Start microphone input
-navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-  const audioContext = new AudioContext();
-  const source = audioContext.createMediaStreamSource(stream);
-  const analyser = audioContext.createAnalyser();
-  analyser.fftSize = 256;
+// Select candles and message
+const candles = document.querySelectorAll(".candle");
+const message = document.getElementById("message");
 
-  source.connect(analyser);
-
-  const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-  function checkBlow() {
-    analyser.getByteFrequencyData(dataArray);
-    let volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
-
-    if (volume > 50) { 
-      extinguishCandles();
-    }
-
-    requestAnimationFrame(checkBlow);
-  }
-
-  checkBlow();
-});
-
-function extinguishCandles() {
-  document.getElementById("candle5").classList.add("extinguished");
-  document.getElementById("candle1").classList.add("extinguished");
-}
-document.getElementById("message").classList.remove("hidden");
-// Add this inside your <script> but keep the rest of your code
-let audioCtx;
+let audioContext;
 let analyser;
 let dataArray;
 
-async function enableMic() {
-  try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const source = audioCtx.createMediaStreamSource(stream);
+function startMic() {
+  // Create audio context (for iOS Safari compatibility)
+  audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioContext.createAnalyser();
 
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 256;
-    dataArray = new Uint8Array(analyser.frequencyBinCount);
+  // Ask for microphone access
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
 
-    source.connect(analyser);
+      analyser.fftSize = 256;
+      const bufferLength = analyser.frequencyBinCount;
+      dataArray = new Uint8Array(bufferLength);
 
-    listenBlow();
-  } catch (err) {
-    console.error("Mic error:", err);
-    alert("Please allow microphone access to blow out the candles 🎤");
-  }
+      listenForBlow();
+    })
+    .catch(err => {
+      console.error("Mic access denied:", err);
+      alert("Please enable microphone access to blow out the candles 🎤");
+    });
 }
 
-function listenBlow() {
+function listenForBlow() {
   function detect() {
     analyser.getByteFrequencyData(dataArray);
-    let volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
 
-    if (volume > 60) { // adjust threshold if too sensitive
-      document.querySelectorAll(".candle::after, .flame").forEach(f => f.style.display = "none");
-      alert("🎉 Candles blown out!");
+    // Measure loudness (average volume)
+    let values = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+      values += dataArray[i];
+    }
+    let average = values / dataArray.length;
+
+    // If loud enough, blow out candles
+    if (average > 50) {
+      blowOutCandles();
+      return; // stop checking after success
     }
 
     requestAnimationFrame(detect);
   }
+
   detect();
 }
 
-// Require a tap before enabling mic (fix for mobile autoplay restriction)
+function blowOutCandles() {
+  candles.forEach(candle => {
+    candle.style.setProperty("--flame", "none");
+    candle.style.animation = "none";
+    candle.style.background = "#ddd"; // burned out
+  });
+  message.classList.remove("hidden");
+}
+
+// Start mic on first user interaction (needed for mobile autoplay policies)
 document.body.addEventListener("click", () => {
-  if (!audioCtx || audioCtx.state === "suspended") {
-    enableMic();
+  if (!audioContext || audioContext.state === "suspended") {
+    startMic();
   }
 }, { once: true });
