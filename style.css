@@ -1,0 +1,108 @@
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+background: linear-gradient(to top, #ff9a9e, #fad0c4);
+
+
+  font-family: "Comic Sans MS", cursive, sans-serif;
+}
+
+.cake-container {
+  text-align: center;
+}
+
+.cake {
+  position: relative;
+  width: 220px;
+  height: 120px;
+  background: #5c2c0c; /* chocolate cake */
+  border-radius: 50% / 20%;
+  margin: 0 auto;
+  box-shadow: inset 0 -15px 0 #3e1e08;
+}
+
+.icing {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 230px;
+  height: 50px;
+  background: pink;
+  border-radius: 50%;
+  box-shadow: 0 5px 0 #ff8aa5;
+}
+
+.candle {
+  position: absolute;
+  top: -70px;
+  width: 40px;
+  height: 60px;
+  background: #fff5cc;
+  color: #333;
+  font-weight: bold;
+  font-size: 30px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: inset 0 -5px #ccc;
+  font-family: Arial, sans-serif;
+}
+
+.candle::before {
+  content: "";
+  position: absolute;
+  top: -15px;
+  width: 6px;
+  height: 15px;
+  background: black;
+  border-radius: 2px;
+}
+
+.candle::after {
+  content: "";
+  position: absolute;
+  top: -25px;
+  width: 15px;
+  height: 20px;
+  background: radial-gradient(circle, yellow 50%, orange 80%, transparent 100%);
+  border-radius: 50%;
+  animation: flicker 0.2s infinite alternate;
+}
+
+#candle5 {
+  left: 60px; /* position for "5" */
+}
+
+#candle1 {
+  right: 60px; /* position for "1" */
+}
+
+@keyframes flicker {
+  from { transform: scale(1) rotate(-2deg); }
+  to { transform: scale(1.1) rotate(2deg); }
+}
+
+.candle.extinguished::after {
+  display: none;
+}
+.hidden {
+  display: none;
+}
+
+#message {
+  margin-top: 20px;
+  font-size: 2.5rem;
+  color: #ff0080;
+  text-shadow: 2px 2px 5px white;
+  animation: pop 0.5s ease forwards;
+}
+
+@keyframes pop {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
