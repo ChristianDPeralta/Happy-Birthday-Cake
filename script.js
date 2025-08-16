@@ -1,69 +1,46 @@
-// Select candles and message
-const candles = document.querySelectorAll(".candle");
-const message = document.getElementById("message");
-
+let mic;
 let audioContext;
 let analyser;
 let dataArray;
 
 function startMic() {
-  // Create audio context (for iOS Safari compatibility)
+  // create audio context
   audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  analyser = audioContext.createAnalyser();
-
-  // Ask for microphone access
+  
   navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      const source = audioContext.createMediaStreamSource(stream);
-      source.connect(analyser);
+    .then((stream) => {
+      mic = audioContext.createMediaStreamSource(stream);
+      analyser = audioContext.createAnalyser();
+      mic.connect(analyser);
 
       analyser.fftSize = 256;
-      const bufferLength = analyser.frequencyBinCount;
+      let bufferLength = analyser.frequencyBinCount;
       dataArray = new Uint8Array(bufferLength);
 
       listenForBlow();
     })
-    .catch(err => {
-      console.error("Mic access denied:", err);
-      alert("Please enable microphone access to blow out the candles 🎤");
+    .catch((err) => {
+      console.error("Microphone access denied:", err);
     });
 }
 
 function listenForBlow() {
-  function detect() {
+  function checkVolume() {
     analyser.getByteFrequencyData(dataArray);
+    let volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
 
-    // Measure loudness (average volume)
-    let values = 0;
-    for (let i = 0; i < dataArray.length; i++) {
-      values += dataArray[i];
+    if (volume > 60) {  // threshold for "blowing"
+      blowCandles();
+      return;
     }
-    let average = values / dataArray.length;
-
-    // If loud enough, blow out candles
-    if (average > 50) {
-      blowOutCandles();
-      return; // stop checking after success
-    }
-
-    requestAnimationFrame(detect);
+    requestAnimationFrame(checkVolume);
   }
-
-  detect();
+  checkVolume();
 }
 
-function blowOutCandles() {
-  candles.forEach(candle => {
-    candle.style.setProperty("--flame", "none");
-    candle.style.animation = "none";
-    candle.style.background = "#ddd"; // burned out
-  });
-  message.classList.remove("hidden");
+function blowCandles() {
+  document.getElementById("candle5").style.opacity = 0.2;
+  document.getElementById("candle1").style.opacity = 0.2;
+  document.getElementById("message").classList.remove("hidden");
+  document.getElementById("startBtn").style.display = "none"; // hide start button
 }
-
-// Start mic on first user interaction (needed for mobile autoplay policies)
-document.body.addEventListener("click", () => {
-  if (!audioContext || audioContext.state === "suspended") {
-    startMic();
-  }
-}, { once: true });
