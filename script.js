@@ -2,8 +2,9 @@ let audioContext;
 let analyser;
 let dataArray;
 
+document.getElementById("startBtn").addEventListener("click", startMic);
+
 function startMic() {
-  // resume audio context for iOS Safari
   if (audioContext && audioContext.state === "suspended") {
     audioContext.resume();
   }
@@ -33,7 +34,7 @@ function listenForBlow() {
     analyser.getByteFrequencyData(dataArray);
     let volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
 
-    if (volume > 60) { // Adjust sensitivity here
+    if (volume > 60) {
       blowCandles();
       return;
     }
