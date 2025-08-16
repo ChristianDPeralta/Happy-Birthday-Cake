@@ -1,15 +1,18 @@
-let mic;
 let audioContext;
 let analyser;
 let dataArray;
 
 function startMic() {
-  // create audio context
+  // resume audio context for iOS Safari
+  if (audioContext && audioContext.state === "suspended") {
+    audioContext.resume();
+  }
+
   audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  
+
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then((stream) => {
-      mic = audioContext.createMediaStreamSource(stream);
+      let mic = audioContext.createMediaStreamSource(stream);
       analyser = audioContext.createAnalyser();
       mic.connect(analyser);
 
@@ -20,7 +23,8 @@ function startMic() {
       listenForBlow();
     })
     .catch((err) => {
-      console.error("Microphone access denied:", err);
+      alert("Microphone access is required! Please allow it.");
+      console.error("Microphone error:", err);
     });
 }
 
@@ -29,7 +33,7 @@ function listenForBlow() {
     analyser.getByteFrequencyData(dataArray);
     let volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
 
-    if (volume > 60) {  // threshold for "blowing"
+    if (volume > 60) { // Adjust sensitivity here
       blowCandles();
       return;
     }
@@ -42,5 +46,5 @@ function blowCandles() {
   document.getElementById("candle5").style.opacity = 0.2;
   document.getElementById("candle1").style.opacity = 0.2;
   document.getElementById("message").classList.remove("hidden");
-  document.getElementById("startBtn").style.display = "none"; // hide start button
+  document.getElementById("startBtn").style.display = "none";
 }
